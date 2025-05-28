@@ -11,11 +11,14 @@ import pickle
 import time
 import great_expectations as gx
 
+
 class DataLoader:
     """データロードを行うクラス"""
 
     @staticmethod
-    def load_titanic_data(path=None):
+    def load_titanic_data(
+        path="/Users/saitosusumu/Desktop/lecture-ai-engineering/day5/演習2/data/Titanic.csv",
+    ):
         """Titanicデータセットを読み込む"""
         if path:
             return pd.read_csv(path)
@@ -285,3 +288,32 @@ if __name__ == "__main__":
     # ベースラインとの比較
     baseline_ok = ModelTester.compare_with_baseline(metrics)
     print(f"ベースライン比較: {'合格' if baseline_ok else '不合格'}")
+
+# 推論時間と精度をチェックする関数を作成
+
+
+def test_inference_speed_and_accuracy():
+    """推論速度と精度のテスト"""
+    # データロード
+    data = DataLoader.load_titanic_data()
+    X, y = DataLoader.preprocess_titanic_data(data)
+    X_train, X_test, y_train, y_test = train_test_split(
+        X, y, test_size=0.2, random_state=42
+    )
+
+    # モデル学習
+    model = ModelTester.train_model(X_train, y_train)
+
+    # 評価
+    metrics = ModelTester.evaluate_model(model, X_test, y_test)
+
+    # 精度チェック
+    assert (
+        metrics["accuracy"] >= 0.75
+    ), f"精度がベースラインを下回っています: {metrics['accuracy']}"
+
+    # 推論時間チェック
+    assert (
+        metrics["inference_time"] < 1.0
+    ), f"推論時間が長すぎます: {metrics['inference_time']}秒"
+    print("推論速度と精度のテストが成功しました。")
